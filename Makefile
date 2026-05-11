@@ -29,50 +29,50 @@ restart: ## Restart all containers
 ## ——— Backend ——————————————————————————————————————
 
 install: ## Install backend dependencies
-	cd backend && npm install
+	cd backend && bun install
 
 dev: ## Start backend in dev mode (local, no Docker)
-	cd backend && npm run start:dev
+	cd backend && bun run start:dev
 
 build: ## Build backend
-	cd backend && npm run build
+	cd backend && bun run build
 
 lint: ## Lint backend code
-	cd backend && npm run lint
+	cd backend && bun run lint
 
 lint-fix: ## Lint and auto-fix backend code
-	cd backend && npm run format
+	cd backend && bun run format
 
 ## ——— Tests ————————————————————————————————————————
 
 test: ## Run unit tests
-	cd backend && npm test
+	cd backend && bun run test
 
 test-watch: ## Run unit tests in watch mode
-	cd backend && npm run test:watch
+	cd backend && bun run test:watch
 
 test-cov: ## Run unit tests with coverage
-	cd backend && npm run test:cov
+	cd backend && bun run test:cov
 
 test-e2e: ## Run e2e tests
-	cd backend && npm run test:e2e
+	cd backend && bun run test:e2e
 
 test-smoke: ## Run smoke tests
-	cd backend && npm run test:smoke
+	cd backend && bun run test:smoke
 
 ## ——— Prisma ———————————————————————————————————————
 
 prisma-generate: ## Generate Prisma client
-	cd backend && npx prisma generate
+	cd backend && bunx prisma generate
 
 prisma-migrate: ## Create and apply a migration (usage: make prisma-migrate name=init)
-	cd backend && npx prisma migrate dev --name $(name)
+	cd backend && bunx prisma migrate dev --name $(name)
 
 prisma-studio: ## Open Prisma Studio
-	cd backend && npx prisma studio
+	cd backend && bunx prisma studio
 
 prisma-seed: ## Seed the database
-	cd backend && npx prisma db seed
+	cd backend && bunx prisma db seed
 
 ## ——— Help —————————————————————————————————————————
 

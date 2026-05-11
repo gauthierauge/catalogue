@@ -1,24 +1,24 @@
-FROM node:20-alpine AS base
+FROM oven/bun:1-alpine AS base
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
 COPY . .
 
-RUN npx prisma generate
-RUN npm run build
+RUN bunx prisma generate
+RUN bun run build
 
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --omit=dev
+COPY --from=base /app/package.json /app/bun.lock ./
+RUN npm install -g bun && bun install --frozen-lockfile --production
 
 COPY --from=base /app/dist ./dist
 
 EXPOSE 3000
 
-CMD ["node", "dist/main"]
+CMD ["node", "dist/main/main"]

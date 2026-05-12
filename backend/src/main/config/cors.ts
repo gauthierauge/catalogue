@@ -3,9 +3,16 @@ import { ConfigService } from '@nestjs/config';
 
 export function configureCors(app: INestApplication) {
   const configService = app.get(ConfigService);
-  const origin = configService.get<string>('CORS_ORIGIN', 'http://localhost:5173');
+  const origins = configService
+    .get<string>('CORS_ORIGINS', 'http://localhost:5173')
+    .split(',')
+    .map((o) => o.trim());
 
   app.enableCors({
-    origin,
+    origin: origins,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    maxAge: 3600,
   });
 }

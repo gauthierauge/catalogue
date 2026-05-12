@@ -33,6 +33,7 @@ install: ## Install backend dependencies
 	cd backend && bun install
 
 dev: ## Start containers in dev mode with hot reload
+	$(DOCKER_COMPOSE) down && \
 	$(DOCKER_COMPOSE_DEV) up -d --build
 
 build: ## Build backend

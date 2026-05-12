@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from '@/main/app.module';
 import { configureCors } from '@/main/config/cors';
+import { configureHelmet } from '@/main/config/helmet';
 import { configureValidation } from '@/main/config/validation';
 import { GlobalExceptionFilter } from '@/main/filters/global-exception.filter';
 
@@ -14,6 +15,7 @@ async function bootstrap() {
       logger: ['log', 'error', 'warn', 'debug', 'verbose'],
     });
 
+    configureHelmet(app);
     configureValidation(app);
     configureCors(app);
 

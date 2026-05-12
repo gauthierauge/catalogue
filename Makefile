@@ -1,4 +1,5 @@
 DOCKER_COMPOSE = docker compose -f docker/docker-compose.yaml --env-file docker/.env
+DOCKER_COMPOSE_DEV = $(DOCKER_COMPOSE) -f docker/docker-compose.dev.yaml
 
 ## ——— Docker ———————————————————————————————————————
 
@@ -31,8 +32,8 @@ restart: ## Restart all containers
 install: ## Install backend dependencies
 	cd backend && bun install
 
-dev: ## Start backend in dev mode (local, no Docker)
-	cd backend && bun run start:dev
+dev: ## Start containers in dev mode with hot reload
+	$(DOCKER_COMPOSE_DEV) up -d --build
 
 build: ## Build backend
 	cd backend && bun run build

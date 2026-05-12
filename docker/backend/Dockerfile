@@ -8,6 +8,14 @@ RUN bun install --frozen-lockfile
 COPY . .
 
 RUN bunx prisma generate
+
+FROM base AS dev
+
+EXPOSE 3000
+CMD ["bun", "run", "start:dev"]
+
+FROM base AS build
+
 RUN bun run build
 
 FROM node:20-alpine AS production

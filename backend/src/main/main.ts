@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from '@/main/app.module';
 import { configureCors } from '@/main/config/cors';
+import { configureSwagger } from '@/main/config/swagger';
 import { configureValidation } from '@/main/config/validation';
 
 async function bootstrap() {
@@ -15,6 +16,7 @@ async function bootstrap() {
 
     configureValidation(app);
     configureCors(app);
+    configureSwagger(app);
 
     const configService = app.get(ConfigService);
     const port = configService.get<number>('PORT', 3000);

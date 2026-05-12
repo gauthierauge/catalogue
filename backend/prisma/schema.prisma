@@ -7,12 +7,47 @@ datasource db {
   provider = "postgresql"
 }
 
-model Product {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  price       Float
-  stock       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+enum BookType {
+  NOVEL
+  COMIC
+  MANGA
+  ESSAY
+  BIOGRAPHY
+  MANUAL
+}
+
+enum BookGenre {
+  SCIENCE_FICTION
+  FANTASY
+  CRIME
+  ROMANCE
+  HORROR
+  ADVENTURE
+  HISTORY
+  YOUNG_ADULT
+  CHILDREN
+  NON_FICTION
+}
+
+model Author {
+  id        Int    @id @default(autoincrement())
+  lastname  String
+  firstname String
+  books     Book[]
+}
+
+model Book {
+  id              Int       @id @default(autoincrement())
+  title           String
+  price           Float
+  description     String?
+  authors         Author[]
+  publisherName   String?
+  quantity        Int       @default(0)
+  type            BookType
+  genre           BookGenre
+  isbn            String    @unique
+  publicationDate DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }

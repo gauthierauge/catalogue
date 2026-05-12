@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from '@/main/app.module';
+import { configureBodyParser } from '@/main/config/body-parser';
 import { configureCors } from '@/main/config/cors';
 import { configureHelmet } from '@/main/config/helmet';
 import { configureValidation } from '@/main/config/validation';
@@ -18,6 +19,7 @@ async function bootstrap() {
     configureHelmet(app);
     configureValidation(app);
     configureCors(app);
+    configureBodyParser(app);
 
     app.useGlobalFilters(new GlobalExceptionFilter());
     app.setGlobalPrefix('api');

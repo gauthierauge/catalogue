@@ -3,6 +3,12 @@ services:
     image: postgres:17-alpine
     container_name: catalogue-postgres
     restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - hba_file=/etc/postgresql/pg_hba.conf
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
@@ -10,9 +16,12 @@ services:
     secrets:
       - postgres_password
       - app_user_password
+      - migrator_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+      - ./bdd/postgres/init:/docker-entrypoint-initdb.d:ro
+      - ./bdd/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./bdd/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
     networks:
       - catalogue
     healthcheck:
@@ -46,8 +55,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_DB: ${POSTGRES_DB}
     secrets:
-      - postgres_password
       - app_user_password
+      - migrator_password
     depends_on:
       postgres:
         condition: service_healthy
@@ -57,6 +66,88 @@ services:
       resources:
         limits:
           memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+
+  db-backup:
+    image: prodrigestivill/postgres-backup-local:17
+    container_name: catalogue-db-backup
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      SCHEDULE: "@daily"
+      POSTGRES_EXTRA_OPTS: "-Fc"
+      BACKUP_KEEP_DAYS: "7"
+      BACKUP_KEEP_WEEKS: "4"
+      BACKUP_KEEP_MONTHS: "6"
+      HEALTHCHECK_PORT: "8080"
+    secrets:
+      - postgres_password
+    volumes:
+      - ./bdd/backups:/backups
+    networks:
+      - catalogue
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+
+  db-backup-offsite:
+    image: restic/restic:latest
+    container_name: catalogue-db-backup-offsite
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Offsite backup: waiting 60s before first run..."
+        sleep 60
+        while true; do
+          /scripts/restic-backup.sh
+          echo "Next offsite backup in 24h."
+          sleep 86400
+        done
+    environment:
+      B2_ACCOUNT_ID: ${B2_ACCOUNT_ID}
+      B2_ACCOUNT_KEY: ${B2_ACCOUNT_KEY}
+      RESTIC_REPOSITORY: b2:${B2_BUCKET}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD}
+      HEALTHCHECK_URL: ${HEALTHCHECK_URL}
+    volumes:
+      - ./bdd/backups:/data:ro
+      - ../scripts/restic-backup.sh:/scripts/restic-backup.sh:ro
+    networks:
+      - catalogue
+    depends_on:
+      db-backup:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     logging:
       driver: json-file
       options:
@@ -78,3 +169,5 @@ secrets:
     file: ./secrets/postgres_password.txt
   app_user_password:
     file: ./secrets/app_user_password.txt
+  migrator_password:
+    file: ./secrets/migrator_password.txt

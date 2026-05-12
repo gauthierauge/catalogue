@@ -11,7 +11,7 @@ RUN bunx prisma generate
 
 FROM base AS dev
 
-EXPOSE 3000
+EXPOSE 8002
 CMD ["bun", "run", "start:dev"]
 
 FROM base AS build
@@ -27,6 +27,6 @@ RUN npm install -g bun && bun install --frozen-lockfile --production
 
 COPY --from=base /app/dist ./dist
 
-EXPOSE 3000
+EXPOSE 8002
 
 CMD ["node", "dist/main/main"]

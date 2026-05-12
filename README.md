@@ -56,7 +56,12 @@ make prisma-generate
 
 # Appliquer les migrations
 make prisma-migrate name=init
+
+# Remplir la base avec les données de départ
+make prisma-seed
 ```
+
+Les fichiers `.env` sont locaux et ne doivent pas être commités. En équipe, chacun copie les fichiers `.env.example` puis adapte ses valeurs localement si besoin. Les exemples `docker/.env.example` et `backend/.env.example` doivent rester cohérents entre eux pour éviter les erreurs de connexion PostgreSQL.
 
 ## Lancement
 
@@ -100,6 +105,7 @@ make help
 | `make test-smoke` | Smoke tests |
 | `make prisma-generate` | Générer le client Prisma |
 | `make prisma-migrate` | Créer/appliquer une migration |
+| `make prisma-seed` | Remplir la base avec les données de départ |
 | `make prisma-studio` | Ouvrir Prisma Studio |
 
 ## Variables d'environnement

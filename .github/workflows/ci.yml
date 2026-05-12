@@ -57,6 +57,10 @@ jobs:
         working-directory: ./backend
         run: bun install --frozen-lockfile
 
+      - name: Generate Prisma client
+        working-directory: ./backend
+        run: bunx prisma generate
+
       - name: Unit tests
         working-directory: ./backend
         run: bun run test
@@ -86,6 +90,10 @@ jobs:
       - name: Install dependencies
         working-directory: ./backend
         run: bun install --frozen-lockfile
+
+      - name: Generate Prisma client
+        working-directory: ./backend
+        run: bunx prisma generate
 
       - name: Lint ESLint
         working-directory: ./backend

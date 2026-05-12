@@ -1,17 +1,8 @@
-/*
-  Warnings:
-
-  - You are about to drop the `Product` table. If the table is not empty, all the data it contains will be lost.
-
-*/
 -- CreateEnum
 CREATE TYPE "BookType" AS ENUM ('NOVEL', 'COMIC', 'MANGA', 'ESSAY', 'BIOGRAPHY', 'MANUAL');
 
 -- CreateEnum
 CREATE TYPE "BookGenre" AS ENUM ('SCIENCE_FICTION', 'FANTASY', 'CRIME', 'ROMANCE', 'HORROR', 'ADVENTURE', 'HISTORY', 'YOUNG_ADULT', 'CHILDREN', 'NON_FICTION');
-
--- DropTable
-DROP TABLE "Product";
 
 -- CreateTable
 CREATE TABLE "Author" (
@@ -41,6 +32,20 @@ CREATE TABLE "Book" (
 );
 
 -- CreateTable
+CREATE TABLE "StockEvent" (
+    "id" SERIAL NOT NULL,
+    "idempotencyKey" TEXT NOT NULL,
+    "paymentId" TEXT,
+    "bookId" INTEGER NOT NULL,
+    "status" TEXT NOT NULL,
+    "quantity" INTEGER NOT NULL,
+    "resultQuantity" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "StockEvent_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "_AuthorToBook" (
     "A" INTEGER NOT NULL,
     "B" INTEGER NOT NULL,
@@ -52,7 +57,13 @@ CREATE TABLE "_AuthorToBook" (
 CREATE UNIQUE INDEX "Book_isbn_key" ON "Book"("isbn");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "StockEvent_idempotencyKey_key" ON "StockEvent"("idempotencyKey");
+
+-- CreateIndex
 CREATE INDEX "_AuthorToBook_B_index" ON "_AuthorToBook"("B");
+
+-- AddForeignKey
+ALTER TABLE "StockEvent" ADD CONSTRAINT "StockEvent_bookId_fkey" FOREIGN KEY ("bookId") REFERENCES "Book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_AuthorToBook" ADD CONSTRAINT "_AuthorToBook_A_fkey" FOREIGN KEY ("A") REFERENCES "Author"("id") ON DELETE CASCADE ON UPDATE CASCADE;

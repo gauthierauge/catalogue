@@ -50,13 +50,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('bun.lockb') }}
+          key: bun-${{ hashFiles('backend/bun.lockb') }}
           restore-keys: bun-
 
       - name: Install dependencies
+        working-directory: ./backend
         run: bun install --frozen-lockfile
 
       - name: Unit tests
+        working-directory: ./backend
         run: bun run test
 
   # ══════════════════════════════════════════
@@ -78,16 +80,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('bun.lockb') }}
+          key: bun-${{ hashFiles('backend/bun.lockb') }}
           restore-keys: bun-
 
       - name: Install dependencies
+        working-directory: ./backend
         run: bun install --frozen-lockfile
 
       - name: Lint ESLint
+        working-directory: ./backend
         run: bun run lint
 
       - name: Build TypeScript
+        working-directory: ./backend
         run: bun run build
 
   # ══════════════════════════════════════════

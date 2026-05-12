@@ -32,7 +32,9 @@
     "class-validator": "^0.15.1",
     "dotenv": "^17.4.2",
     "helmet": "^8.1.0",
+    "nestjs-pino": "^4.6.1",
     "pg": "^8.20.0",
+    "pino-http": "^11.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },

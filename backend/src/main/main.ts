@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
-import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Logger } from 'nestjs-pino';
 import { AppModule } from '@/main/app.module';
 import { configureBodyParser } from '@/main/config/body-parser';
 import { configureCors } from '@/main/config/cors';
@@ -9,12 +9,11 @@ import { configureValidation } from '@/main/config/validation';
 import { GlobalExceptionFilter } from '@/main/filters/global-exception.filter';
 
 async function bootstrap() {
-  const logger = new Logger('Bootstrap');
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const logger = app.get(Logger);
+  app.useLogger(logger);
 
   try {
-    const app = await NestFactory.create(AppModule, {
-      logger: ['log', 'error', 'warn', 'debug', 'verbose'],
-    });
 
     configureHelmet(app);
     configureValidation(app);
@@ -30,7 +29,6 @@ async function bootstrap() {
     await app.listen(port);
     logger.log(`Application listening on port ${port}`);
   } catch (error: unknown) {
-    const logger = new Logger('Bootstrap');
     logger.error('Fatal error during bootstrap', error);
     process.exit(1);
   }

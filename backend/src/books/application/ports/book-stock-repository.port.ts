@@ -1,6 +1,7 @@
 export const BOOK_STOCK_REPOSITORY = Symbol('BOOK_STOCK_REPOSITORY');
 
 export type StockEventStatus =
+  | 'RESERVED'
   | 'PAYMENT_PENDING'
   | 'PAYMENT_SUCCESS'
   | 'PAYMENT_FAILED'

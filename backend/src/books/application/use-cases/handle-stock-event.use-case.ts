@@ -1,9 +1,9 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import {
-  BOOK_STOCK_REPOSITORY,
+import { BOOK_STOCK_REPOSITORY } from '@/books/application/ports/book-stock-repository.port';
+import type {
   BookStockRepositoryPort,
   StockEventStatus,
-} from '@/books/stock/application/ports/book-stock-repository.port';
+} from '@/books/application/ports/book-stock-repository.port';
 
 type HandleStockEventInput = {
   idempotencyKey?: string;
@@ -38,7 +38,11 @@ export class HandleStockEventUseCase {
   }
 
   private getStockDelta(status: StockEventStatus, quantity: number): number {
-    if (status === 'PAYMENT_PENDING' || status === 'PAYMENT_SUCCESS') {
+    if (
+      status === 'RESERVED' ||
+      status === 'PAYMENT_PENDING' ||
+      status === 'PAYMENT_SUCCESS'
+    ) {
       return -quantity;
     }
 

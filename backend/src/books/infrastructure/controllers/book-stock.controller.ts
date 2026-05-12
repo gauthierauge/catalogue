@@ -6,8 +6,11 @@ import {
   Patch,
   ParseIntPipe,
 } from '@nestjs/common';
-import { HandleStockEventUseCase } from '@/books/stock/application/use-cases/handle-stock-event.use-case';
-import { StockEventDto } from '@/books/stock/infrastructure/dto/stock-event.dto';
+import { HandleStockEventUseCase } from '@/books/application/use-cases/handle-stock-event.use-case';
+import {
+  ReserveStockDto,
+  StockEventDto,
+} from '@/books/infrastructure/dto/input/stock-event.dto';
 
 @Controller('books')
 export class BookStockController {
@@ -27,6 +30,20 @@ export class BookStockController {
       bookId,
       status: stockEventDto.status,
       quantity: stockEventDto.quantity,
+    });
+  }
+
+  @Patch(':bookId/stock/reserve')
+  reserveStock(
+    @Param('bookId', ParseIntPipe) bookId: number,
+    @Headers('x-idempotency-key') idempotencyKey: string | undefined,
+    @Body() reserveStockDto: ReserveStockDto,
+  ) {
+    return this.handleStockEventUseCase.execute({
+      idempotencyKey,
+      bookId,
+      status: 'RESERVED',
+      quantity: reserveStockDto.quantity,
     });
   }
 }

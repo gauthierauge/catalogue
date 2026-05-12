@@ -4,7 +4,7 @@ import { GetBooksListUseCase } from './application/use-cases/get-books-list.use-
 import { BOOK_REPOSITORY } from './application/ports/book-repository.port';
 import { PrismaBookRepository } from './infrastructure/adapters/prisma-book.repository';
 import { PrismaModule } from '@/prisma/prisma.module';
-import { BookStockModule } from '@/books/stock/book-stock.module';
+import { BookStockModule } from '@/books/book-stock.module';
 
 @Module({
     imports: [PrismaModule, BookStockModule],

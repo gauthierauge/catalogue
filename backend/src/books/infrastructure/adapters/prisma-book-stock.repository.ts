@@ -3,12 +3,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
+import type {
   ApplyStockEventInput,
   ApplyStockEventResult,
   BookStockRepositoryPort,
   StockEventStatus,
-} from '@/books/stock/application/ports/book-stock-repository.port';
+} from '@/books/application/ports/book-stock-repository.port';
 import { PrismaService } from '@/prisma/prisma.service';
 
 type StoredStockEvent = {

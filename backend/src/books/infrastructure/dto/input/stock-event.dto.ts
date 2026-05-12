@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
-import { StockEventStatus } from '@/books/stock/application/ports/book-stock-repository.port';
+import type { StockEventStatus } from '@/books/application/ports/book-stock-repository.port';
 
 export enum StockEventStatusDto {
   PAYMENT_PENDING = 'PAYMENT_PENDING',
@@ -17,6 +17,13 @@ export class StockEventDto {
   @IsEnum(StockEventStatusDto)
   status: StockEventStatus;
 
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  quantity: number;
+}
+
+export class ReserveStockDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)

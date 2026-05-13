@@ -3,18 +3,30 @@ services:
     image: postgres:17-alpine
     container_name: catalogue-postgres
     restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - hba_file=/etc/postgresql/pg_hba.conf
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+    secrets:
+      - postgres_password
+      - app_user_password
+      - migrator_password
+      - monitoring_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./bdd/postgres/init:/docker-entrypoint-initdb.d:ro
+      - ./bdd/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./bdd/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
     networks:
       - catalogue
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -32,15 +44,20 @@ services:
 
   backend:
     build:
-      context: ../backend
-      dockerfile: ../docker/backend/Dockerfile
+      context: ..
+      dockerfile: docker/backend/Dockerfile
     container_name: catalogue-backend
     restart: unless-stopped
     ports:
       - "8002:8002"
     environment:
       PORT: 8002
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      NODE_ENV: production
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+    secrets:
+      - app_user_password
+      - migrator_password
     depends_on:
       postgres:
         condition: service_healthy
@@ -58,9 +75,224 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  db-backup:
+    image: prodrigestivill/postgres-backup-local:17
+    container_name: catalogue-db-backup
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      SCHEDULE: "@daily"
+      POSTGRES_EXTRA_OPTS: "-Fc"
+      BACKUP_KEEP_DAYS: "7"
+      BACKUP_KEEP_WEEKS: "4"
+      BACKUP_KEEP_MONTHS: "6"
+      HEALTHCHECK_PORT: "8080"
+    secrets:
+      - postgres_password
+    volumes:
+      - ./bdd/backups:/backups
+    networks:
+      - catalogue
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+
+  db-backup-offsite:
+    image: restic/restic:latest
+    container_name: catalogue-db-backup-offsite
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Offsite backup: waiting 60s before first run..."
+        sleep 60
+        while true; do
+          /scripts/restic-backup.sh
+          echo "Next offsite backup in 24h."
+          sleep 86400
+        done
+    environment:
+      B2_ACCOUNT_ID: ${B2_ACCOUNT_ID}
+      B2_ACCOUNT_KEY: ${B2_ACCOUNT_KEY}
+      RESTIC_REPOSITORY: b2:${B2_BUCKET}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD}
+      HEALTHCHECK_URL: ${HEALTHCHECK_URL}
+    volumes:
+      - ./bdd/backups:/data:ro
+      - ../scripts/restic-backup.sh:/scripts/restic-backup.sh:ro
+    networks:
+      - catalogue
+    depends_on:
+      db-backup:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: catalogue-postgres-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_URI: postgres:5432/${POSTGRES_DB}?sslmode=disable
+      DATA_SOURCE_USER: monitoring
+      DATA_SOURCE_PASS_FILE: /run/secrets/monitoring_password
+    secrets:
+      - monitoring_password
+    networks:
+      - catalogue
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: catalogue-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - catalogue
+    depends_on:
+      - postgres-exporter
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: catalogue-grafana
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin_password
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    secrets:
+      - grafana_admin_password
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - catalogue
+    depends_on:
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: catalogue-alertmanager
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        sed "s|DISCORD_WEBHOOK_PLACEHOLDER|$$DISCORD_WEBHOOK_URL|g" \
+          /etc/alertmanager/alertmanager.tmpl.yml > /tmp/alertmanager.yml
+        exec /bin/alertmanager \
+          --config.file=/tmp/alertmanager.yml \
+          --storage.path=/alertmanager
+    environment:
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.tmpl.yml:ro
+      - alertmanager_data:/alertmanager
+    networks:
+      - catalogue
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+
 volumes:
   postgres_data:
+  prometheus_data:
+  grafana_data:
+  alertmanager_data:
 
 networks:
   catalogue:
     driver: bridge
+    internal: false
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  app_user_password:
+    file: ./secrets/app_user_password.txt
+  migrator_password:
+    file: ./secrets/migrator_password.txt
+  monitoring_password:
+    file: ./secrets/monitoring_password.txt
+  grafana_admin_password:
+    file: ./secrets/grafana_admin_password.txt

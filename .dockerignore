@@ -1,0 +1,15 @@
+# Ignore everything by default
+*
+
+# Allow backend source
+!backend/
+backend/node_modules
+backend/dist
+backend/generated
+backend/.env
+backend/*.db
+backend/coverage
+backend/test-results
+
+# Allow entrypoint script
+!docker/backend/entrypoint.sh

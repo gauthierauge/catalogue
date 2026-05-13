@@ -1,9 +1,14 @@
 node_modules
 dist
 .env
+docker/.env
 generated
 coverage
 *.db
 test-results
 .idea
 package-lock.json
+docker/bdd/backups
+docker/secrets/*
+!docker/secrets/.gitignore
+!docker/secrets/*.example

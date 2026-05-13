@@ -1,28 +1,8 @@
 # API Stock - Service Catalogue
 
-Base URL :
+Cette API permet aux services panier, commande et paiement de reserver ou liberer le stock des livres.
 
-```http
-/api/books
-```
-
-Tous les appels doivent envoyer une cle d'idempotence :
-
-```http
-x-idempotency-key: une-cle-unique
-```
-
-Cette cle identifie l'evenement de stock et evite de modifier le stock plusieurs fois si le meme evenement est renvoye.
-
-Exemples de cles :
-
-```txt
-cart-123-reserved
-order-123-success
-order-123-failed
-```
-
-## Route principale a utiliser
+## Route unique
 
 ```http
 PATCH /api/books/stock-events
@@ -30,7 +10,21 @@ Content-Type: application/json
 x-idempotency-key: order-123-reserved
 ```
 
-Payload :
+## Idempotence
+
+Le header `x-idempotency-key` est obligatoire.
+
+Il doit etre unique par evenement de stock. Pour une meme commande, on garde le meme identifiant metier, mais on change le suffixe selon l'etape :
+
+```txt
+order-123-reserved
+order-123-success
+order-123-failed
+```
+
+Ne pas reutiliser exactement la meme cle pour `RESERVED`, `SUCCESS` et `FAILED`.
+
+## Payload
 
 ```json
 {
@@ -48,27 +42,29 @@ Payload :
 }
 ```
 
-## Statuts possibles
+Il n'y a pas de `paymentId` dans ce payload. La reference de l'evenement est la cle d'idempotence.
+
+## Statuts
 
 ```txt
-RESERVED => reservation du panier ou de la commande, decremente le stock
-SUCCESS  => paiement valide, confirme la reservation, ne modifie pas le stock
-FAILED   => paiement echoue ou commande annulee, libere la reservation, incremente le stock
+RESERVED => reserve les livres, decremente le stock
+SUCCESS  => confirme la reservation, ne modifie pas le stock
+FAILED   => annule la reservation, incremente le stock
 ```
 
-Le chemin normal est :
+Flow normal :
 
 ```txt
 RESERVED -> SUCCESS
 RESERVED -> FAILED
 ```
 
-## Exemple reservation panier
+## Exemple reservation
 
 ```http
 PATCH /api/books/stock-events
 Content-Type: application/json
-x-idempotency-key: cart-123-reserved
+x-idempotency-key: order-123-reserved
 ```
 
 ```json

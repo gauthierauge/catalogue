@@ -14,6 +14,15 @@ type HandleStockEventInput = {
   quantity: number;
 };
 
+type ReserveStockBatchInput = {
+  idempotencyKey?: string;
+  status?: StockEventStatus;
+  items: {
+    bookId: number;
+    quantity: number;
+  }[];
+};
+
 @Injectable()
 export class HandleStockEventUseCase {
   constructor(
@@ -39,16 +48,60 @@ export class HandleStockEventUseCase {
     });
   }
 
+  async executeBatch(input: ReserveStockBatchInput) {
+    if (!input.idempotencyKey?.trim()) {
+      throw new BadRequestException('Missing x-idempotency-key header');
+    }
+
+    if (!input.status) {
+      throw new BadRequestException('Missing stock event status');
+    }
+
+    const itemsByBookId = new Map<number, number>();
+
+    for (const item of input.items) {
+      itemsByBookId.set(
+        item.bookId,
+        (itemsByBookId.get(item.bookId) ?? 0) + item.quantity,
+      );
+    }
+
+    return this.stockRepository.applyStockBatchEvent({
+      idempotencyKey: input.idempotencyKey.trim(),
+      status: input.status,
+      items: [...itemsByBookId.entries()].map(([bookId, quantity]) => {
+        const { operation, amount } = this.getStockOperation(
+          input.status as StockEventStatus,
+          quantity,
+        );
+
+        return {
+          bookId,
+          quantity,
+          operation,
+          amount,
+        };
+      }),
+    });
+  }
+
+  async reserveBatch(input: Omit<ReserveStockBatchInput, 'status'>) {
+    return this.executeBatch({
+      ...input,
+      status: 'RESERVED',
+    });
+  }
+
   private getStockOperation(
     status: StockEventStatus,
     quantity: number,
   ): { operation: StockOperation; amount: number } {
-    if (
-      status === 'RESERVED' ||
-      status === 'PAYMENT_PENDING' ||
-      status === 'PAYMENT_SUCCESS'
-    ) {
+    if (status === 'RESERVED') {
       return { operation: 'decrement', amount: quantity };
+    }
+
+    if (status === 'SUCCESS') {
+      return { operation: 'increment', amount: 0 };
     }
 
     return { operation: 'increment', amount: quantity };

@@ -1,13 +1,21 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { StockEventStatus } from '@/books/application/ports/book-stock-repository.port';
 
 export enum StockEventStatusDto {
-  PAYMENT_PENDING = 'PAYMENT_PENDING',
-  PAYMENT_SUCCESS = 'PAYMENT_SUCCESS',
-  PAYMENT_FAILED = 'PAYMENT_FAILED',
-  CART_ABANDONED = 'CART_ABANDONED',
+  RESERVED = 'RESERVED',
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
 }
 
 export class StockEventDto {
@@ -33,4 +41,40 @@ export class ReserveStockDto {
   @IsInt()
   @Min(1)
   quantity: number;
+}
+
+export class ReserveStockItemDto {
+  @ApiProperty({ minimum: 1, description: 'Identifiant du livre à réserver' })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  bookId: number;
+
+  @ApiProperty({ minimum: 1, description: 'Quantité à réserver pour ce livre' })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  quantity: number;
+}
+
+export class ReserveStockBatchDto {
+  @ApiProperty({ type: [ReserveStockItemDto], description: 'Livres à réserver' })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => ReserveStockItemDto)
+  items: ReserveStockItemDto[];
+}
+
+export class StockEventBatchDto {
+  @ApiProperty({ enum: StockEventStatusDto, description: 'Statut de l\'événement de stock' })
+  @IsEnum(StockEventStatusDto)
+  status: StockEventStatus;
+
+  @ApiProperty({ type: [ReserveStockItemDto], description: 'Livres concernés par l\'événement' })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => ReserveStockItemDto)
+  items: ReserveStockItemDto[];
 }

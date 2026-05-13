@@ -5,9 +5,11 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       POSTGRES_DB: ${POSTGRES_DB}
-      APP_USER_PASSWORD: ${APP_USER_PASSWORD}
+    secrets:
+      - postgres_password
+      - app_user_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
@@ -32,8 +34,8 @@ services:
 
   backend:
     build:
-      context: ../backend
-      dockerfile: ../docker/backend/Dockerfile
+      context: ..
+      dockerfile: docker/backend/Dockerfile
     container_name: catalogue-backend
     restart: unless-stopped
     ports:
@@ -41,8 +43,11 @@ services:
     environment:
       PORT: 8002
       NODE_ENV: production
-      DATABASE_URL: postgresql://app_user:${APP_USER_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
-      DIRECT_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+    secrets:
+      - postgres_password
+      - app_user_password
     depends_on:
       postgres:
         condition: service_healthy
@@ -67,3 +72,9 @@ networks:
   catalogue:
     driver: bridge
     internal: false
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  app_user_password:
+    file: ./secrets/app_user_password.txt

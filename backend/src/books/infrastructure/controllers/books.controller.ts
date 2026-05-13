@@ -1,12 +1,14 @@
-import { Controller, Get, Query, Logger } from '@nestjs/common';
+import { Controller, Get, Query, Logger, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetBooksListUseCase } from '@/books/application/use-cases/get-books-list.use-case';
+import { GetBookDetailUseCase } from '@/books/application/use-cases/get-book-detail.use-case';
 import { GetBooksQueryDto } from '@/books/infrastructure/dto/input/get-books-query.dto';
 import {
     BookListResponseDto,
     BookListItemResponseDto,
     AuthorResponseDto,
 } from '@/books/infrastructure/dto/output/book-list-response.dto';
+import { BookDetailResponseDto } from '@/books/infrastructure/dto/output/book-detail-response.dto';
 import { Book } from '@/books/domain/models/book.model';
 
 @ApiTags('Books')
@@ -14,7 +16,10 @@ import { Book } from '@/books/domain/models/book.model';
 export class BooksController {
     private readonly logger = new Logger(BooksController.name);
 
-    constructor(private readonly getBooksListUseCase: GetBooksListUseCase) { }
+    constructor(
+        private readonly getBooksListUseCase: GetBooksListUseCase,
+        private readonly getBookDetailUseCase: GetBookDetailUseCase,
+    ) { }
 
     @Get()
     @ApiOperation({ summary: 'Récupérer la liste des livres' })
@@ -30,6 +35,17 @@ export class BooksController {
         return {
             data: books.map((book) => this.toBookListItemDto(book)),
         };
+    }
+
+    @Get(':id')
+    async getBookById(
+        @Param('id', ParseIntPipe) id: number,
+    ): Promise<BookDetailResponseDto> {
+        this.logger.log(`Fetching book detail for ID: ${id}`);
+        const book = await this.getBookDetailUseCase.execute(id);
+        this.logger.log(`Successfully fetched book: ${book.title}`);
+
+        return this.toBookDetailDto(book);
     }
 
     private toBookListItemDto(book: Book): BookListItemResponseDto {
@@ -49,6 +65,25 @@ export class BooksController {
             id: author.id,
             firstname: author.firstname,
             lastname: author.lastname,
+        };
+    }
+
+    private toBookDetailDto(book: Book): BookDetailResponseDto {
+        return {
+            id: book.id,
+            title: book.title,
+            isbn: book.isbn,
+            type: book.type,
+            genre: book.genre,
+            price: book.price.value,
+            quantity: book.stock.quantity,
+            available: book.isAvailable(),
+            authors: book.authors.map((author) => this.toAuthorDto(author)),
+            createdAt: book.createdAt.toISOString(),
+            updatedAt: book.updatedAt.toISOString(),
+            description: book.description,
+            publisherName: book.publisherName,
+            publicationDate: book.publicationDate?.toISOString(),
         };
     }
 }

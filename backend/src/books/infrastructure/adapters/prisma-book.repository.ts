@@ -91,6 +91,8 @@ export class PrismaBookRepository implements BookRepositoryPort {
             Price.create(bookData.price),
             Stock.create(bookData.quantity),
             authors,
+            bookData.createdAt,
+            bookData.updatedAt,
             bookData.description,
             bookData.publisherName,
             bookData.publicationDate,

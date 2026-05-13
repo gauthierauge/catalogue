@@ -34,6 +34,8 @@ export class Book {
         public readonly price: Price,
         public readonly stock: Stock,
         public readonly authors: Author[],
+        public readonly createdAt: Date,
+        public readonly updatedAt: Date,
         public readonly description?: string,
         public readonly publisherName?: string,
         public readonly publicationDate?: Date,

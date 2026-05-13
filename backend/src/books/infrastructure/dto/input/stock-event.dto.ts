@@ -67,3 +67,21 @@ export class ReserveStockBatchDto {
   @Type(() => ReserveStockItemDto)
   items: ReserveStockItemDto[];
 }
+
+export class StockEventBatchDto {
+  @ApiPropertyOptional({ description: 'Identifiant du paiement associé' })
+  @IsOptional()
+  @IsString()
+  paymentId?: string;
+
+  @ApiProperty({ enum: StockEventStatusDto, description: 'Statut de l\'événement de stock' })
+  @IsEnum(StockEventStatusDto)
+  status: StockEventStatus;
+
+  @ApiProperty({ type: [ReserveStockItemDto], description: 'Livres concernés par l\'événement' })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => ReserveStockItemDto)
+  items: ReserveStockItemDto[];
+}

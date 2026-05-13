@@ -24,6 +24,7 @@ export type ApplyStockBatchEventItem = {
 
 export type ApplyStockBatchEventInput = {
   idempotencyKey: string;
+  paymentId?: string;
   status: StockEventStatus;
   items: ApplyStockBatchEventItem[];
 };

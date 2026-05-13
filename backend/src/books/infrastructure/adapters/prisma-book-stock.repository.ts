@@ -171,7 +171,7 @@ export class PrismaBookStockRepository implements BookStockRepositoryPort {
           INSERT INTO "StockEvent"
             ("idempotencyKey", "paymentId", "bookId", "status", "quantity", "resultQuantity")
           VALUES
-            (${this.buildBatchIdempotencyKey(input.idempotencyKey, item.bookId)}, ${null}, ${item.bookId}, ${input.status}, ${item.quantity}, ${updatedStock.quantity})
+            (${this.buildBatchIdempotencyKey(input.idempotencyKey, item.bookId)}, ${input.paymentId ?? null}, ${item.bookId}, ${input.status}, ${item.quantity}, ${updatedStock.quantity})
         `;
 
         results.push({

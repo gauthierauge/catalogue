@@ -1,19 +1,41 @@
-export interface AuthorResponseDto {
+import { ApiProperty } from '@nestjs/swagger';
+import { BookType, BookGenre } from '@/books/domain/models/book.model';
+
+export class AuthorResponseDto {
+    @ApiProperty()
     id: number;
+
+    @ApiProperty()
     firstname: string;
+
+    @ApiProperty()
     lastname: string;
 }
 
-export interface BookListItemResponseDto {
+export class BookListItemResponseDto {
+    @ApiProperty()
     id: number;
+
+    @ApiProperty()
     title: string;
-    type: string;
-    genre: string;
+
+    @ApiProperty({ enum: BookType })
+    type: BookType;
+
+    @ApiProperty({ enum: BookGenre })
+    genre: BookGenre;
+
+    @ApiProperty()
     price: number;
+
+    @ApiProperty()
     quantity: number;
+
+    @ApiProperty({ type: [AuthorResponseDto] })
     authors: AuthorResponseDto[];
 }
 
-export interface BookListResponseDto {
+export class BookListResponseDto {
+    @ApiProperty({ type: [BookListItemResponseDto] })
     data: BookListItemResponseDto[];
 }

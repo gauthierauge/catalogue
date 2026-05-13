@@ -7,13 +7,16 @@ export type StockEventStatus =
   | 'PAYMENT_FAILED'
   | 'CART_ABANDONED';
 
+export type StockOperation = 'increment' | 'decrement';
+
 export type ApplyStockEventInput = {
   idempotencyKey: string;
   paymentId?: string;
   bookId: number;
   status: StockEventStatus;
   quantity: number;
-  delta: number;
+  operation: StockOperation;
+  amount: number;
 };
 
 export type ApplyStockEventResult = {

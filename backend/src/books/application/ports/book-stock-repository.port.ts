@@ -16,6 +16,18 @@ export type ApplyStockEventInput = {
   delta: number;
 };
 
+export type ApplyStockBatchEventItem = {
+  bookId: number;
+  quantity: number;
+  delta: number;
+};
+
+export type ApplyStockBatchEventInput = {
+  idempotencyKey: string;
+  status: StockEventStatus;
+  items: ApplyStockBatchEventItem[];
+};
+
 export type ApplyStockEventResult = {
   bookId: number;
   status: StockEventStatus;
@@ -23,6 +35,13 @@ export type ApplyStockEventResult = {
   alreadyProcessed: boolean;
 };
 
+export type ApplyStockBatchEventResult = {
+  items: ApplyStockEventResult[];
+};
+
 export interface BookStockRepositoryPort {
   applyStockEvent(input: ApplyStockEventInput): Promise<ApplyStockEventResult>;
+  applyStockBatchEvent(
+    input: ApplyStockBatchEventInput,
+  ): Promise<ApplyStockBatchEventResult>;
 }

@@ -13,6 +13,14 @@ type HandleStockEventInput = {
   quantity: number;
 };
 
+type ReserveStockBatchInput = {
+  idempotencyKey?: string;
+  items: {
+    bookId: number;
+    quantity: number;
+  }[];
+};
+
 @Injectable()
 export class HandleStockEventUseCase {
   constructor(
@@ -34,6 +42,31 @@ export class HandleStockEventUseCase {
       status: input.status,
       quantity: input.quantity,
       delta,
+    });
+  }
+
+  async reserveBatch(input: ReserveStockBatchInput) {
+    if (!input.idempotencyKey?.trim()) {
+      throw new BadRequestException('Missing x-idempotency-key header');
+    }
+
+    const itemsByBookId = new Map<number, number>();
+
+    for (const item of input.items) {
+      itemsByBookId.set(
+        item.bookId,
+        (itemsByBookId.get(item.bookId) ?? 0) + item.quantity,
+      );
+    }
+
+    return this.stockRepository.applyStockBatchEvent({
+      idempotencyKey: input.idempotencyKey.trim(),
+      status: 'RESERVED',
+      items: [...itemsByBookId.entries()].map(([bookId, quantity]) => ({
+        bookId,
+        quantity,
+        delta: this.getStockDelta('RESERVED', quantity),
+      })),
     });
   }
 

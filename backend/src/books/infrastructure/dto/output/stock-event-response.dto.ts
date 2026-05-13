@@ -14,3 +14,8 @@ export class StockEventResponseDto {
     @ApiProperty({ description: 'Vrai si l\'événement avait déjà été traité (idempotence)' })
     alreadyProcessed: boolean;
 }
+
+export class StockEventBatchResponseDto {
+    @ApiProperty({ type: [StockEventResponseDto] })
+    items: StockEventResponseDto[];
+}

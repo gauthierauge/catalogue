@@ -6,13 +6,12 @@ COPY backend/package.json backend/bun.lock ./
 RUN bun install --frozen-lockfile
 
 COPY backend/ .
+COPY docker/backend/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 RUN bunx prisma generate
 
 FROM base AS dev
-
-COPY docker/backend/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 8002
 ENTRYPOINT ["entrypoint.sh"]
@@ -31,8 +30,7 @@ RUN bun install --frozen-lockfile --production
 
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/src/generated ./src/generated
-COPY docker/backend/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY --from=base /usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 EXPOSE 8002
 

@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 export function configureCors(app: INestApplication) {
   const configService = app.get(ConfigService);
   const origins = configService
-    .get<string>('CORS_ORIGINS', 'http://localhost:5173')
+    .get<string>('CORS_ORIGINS', 'http://localhost:8000')
     .split(',')
     .map((o) => o.trim());
 

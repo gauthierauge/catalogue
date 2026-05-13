@@ -12,4 +12,8 @@ backend/coverage
 backend/test-results
 
 # Allow entrypoint script
+!docker/
+docker/*
+!docker/backend/
+docker/backend/*
 !docker/backend/entrypoint.sh

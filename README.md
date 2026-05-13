@@ -4,7 +4,7 @@ API de gestion de catalogue produits, construite avec NestJS, Prisma et PostgreS
 
 ## Stack technique
 
-- **Runtime** : Node.js 20
+- **Runtime** : Node.js 24
 - **Framework** : NestJS 11
 - **ORM** : Prisma 7 (PostgreSQL)
 - **Tests** : Vitest + Supertest

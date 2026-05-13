@@ -1,8 +1,8 @@
-# Ignore everything by default
-*
-
-# Allow backend source
-!backend/
+.git
+docker
+docs
+Makefile
+README.md
 backend/node_modules
 backend/dist
 backend/generated

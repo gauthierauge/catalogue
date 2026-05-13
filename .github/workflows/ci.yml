@@ -50,13 +50,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('bun.lockb') }}
+          key: bun-${{ hashFiles('backend/bun.lockb') }}
           restore-keys: bun-
 
       - name: Install dependencies
+        working-directory: ./backend
         run: bun install --frozen-lockfile
 
+      - name: Generate Prisma client
+        working-directory: ./backend
+        run: bunx prisma generate
+
       - name: Unit tests
+        working-directory: ./backend
         run: bun run test
 
   # ══════════════════════════════════════════
@@ -78,16 +84,23 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('bun.lockb') }}
+          key: bun-${{ hashFiles('backend/bun.lockb') }}
           restore-keys: bun-
 
       - name: Install dependencies
+        working-directory: ./backend
         run: bun install --frozen-lockfile
 
+      - name: Generate Prisma client
+        working-directory: ./backend
+        run: bunx prisma generate
+
       - name: Lint ESLint
+        working-directory: ./backend
         run: bun run lint
 
       - name: Build TypeScript
+        working-directory: ./backend
         run: bun run build
 
   # ══════════════════════════════════════════
@@ -129,7 +142,8 @@ jobs:
       - name: Build & Push
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./backend
+          file: ./docker/backend/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

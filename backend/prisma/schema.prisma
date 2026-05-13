@@ -50,4 +50,17 @@ model Book {
   publicationDate DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  stockEvents     StockEvent[]
+}
+
+model StockEvent {
+  id             Int      @id @default(autoincrement())
+  idempotencyKey String   @unique
+  paymentId      String?
+  bookId         Int
+  status         String
+  quantity       Int
+  resultQuantity Int
+  createdAt      DateTime @default(now())
+  book           Book     @relation(fields: [bookId], references: [id])
 }

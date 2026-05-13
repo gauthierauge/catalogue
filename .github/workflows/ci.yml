@@ -18,13 +18,10 @@ jobs:
   tests:
     name: 🧪 Tests
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
 
     services:
       postgres:
-        image: postgres:17-alpine
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
@@ -53,13 +50,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('backend/bun.lock') }}
+          key: bun-${{ hashFiles('backend/bun.lockb') }}
           restore-keys: bun-
 
       - name: Install dependencies
+        working-directory: ./backend
         run: bun install --frozen-lockfile
 
+      - name: Generate Prisma client
+        working-directory: ./backend
+        run: bunx prisma generate
+
       - name: Unit tests
+        working-directory: ./backend
         run: bun run test
 
   # ══════════════════════════════════════════
@@ -68,9 +71,6 @@ jobs:
   quality:
     name: 🔍 Quality
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
 
     steps:
       - uses: actions/checkout@v4
@@ -84,16 +84,23 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('backend/bun.lock') }}
+          key: bun-${{ hashFiles('backend/bun.lockb') }}
           restore-keys: bun-
 
       - name: Install dependencies
+        working-directory: ./backend
         run: bun install --frozen-lockfile
 
-      - name: Lint
+      - name: Generate Prisma client
+        working-directory: ./backend
+        run: bunx prisma generate
+
+      - name: Lint ESLint
+        working-directory: ./backend
         run: bun run lint
 
       - name: Build TypeScript
+        working-directory: ./backend
         run: bun run build
 
   # ══════════════════════════════════════════
@@ -135,8 +142,8 @@ jobs:
       - name: Build & Push
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: docker/backend/Dockerfile
+          context: ./backend
+          file: ./docker/backend/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

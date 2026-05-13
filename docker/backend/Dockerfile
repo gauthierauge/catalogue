@@ -22,7 +22,7 @@ FROM base AS build
 
 RUN bun run build
 
-FROM oven/bun:1-alpine AS production
+FROM node:24-alpine AS production
 
 WORKDIR /app
 

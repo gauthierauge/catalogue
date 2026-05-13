@@ -4,3 +4,7 @@ services:
       target: dev
     volumes:
       - ../backend/src:/app/src
+      - catalogue-logs:/var/log/app
+
+volumes:
+  catalogue-logs:

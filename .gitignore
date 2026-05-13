@@ -8,3 +8,6 @@ coverage
 test-results
 .idea
 package-lock.json
+docker/secrets/*
+!docker/secrets/.gitignore
+!docker/secrets/*.example

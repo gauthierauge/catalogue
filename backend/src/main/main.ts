@@ -17,10 +17,11 @@ async function bootstrap() {
 
     configureValidation(app);
     configureCors(app);
-    configureSwagger(app);
 
     app.useGlobalFilters(new GlobalExceptionFilter());
     app.setGlobalPrefix('api');
+
+    configureSwagger(app);
 
     const configService = app.get(ConfigService);
     const port = configService.get<number>('PORT', 3000);

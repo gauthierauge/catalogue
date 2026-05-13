@@ -10,7 +10,7 @@ import {
 import { Book } from '@/books/domain/models/book.model';
 
 @ApiTags('Books')
-@Controller('api/books')
+@Controller('books')
 export class BooksController {
     private readonly logger = new Logger(BooksController.name);
 

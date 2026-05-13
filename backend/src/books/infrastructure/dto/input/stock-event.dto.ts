@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { StockEventStatus } from '@/books/application/ports/book-stock-repository.port';
 
 export enum StockEventStatusDto {
@@ -10,13 +11,16 @@ export enum StockEventStatusDto {
 }
 
 export class StockEventDto {
+  @ApiPropertyOptional({ description: 'Identifiant du paiement associé' })
   @IsOptional()
   @IsString()
   paymentId?: string;
 
+  @ApiProperty({ enum: StockEventStatusDto, description: 'Statut de l\'événement de stock' })
   @IsEnum(StockEventStatusDto)
   status: StockEventStatus;
 
+  @ApiProperty({ minimum: 1, description: 'Quantité concernée' })
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -24,6 +28,7 @@ export class StockEventDto {
 }
 
 export class ReserveStockDto {
+  @ApiProperty({ minimum: 1, description: 'Quantité à réserver' })
   @Type(() => Number)
   @IsInt()
   @Min(1)

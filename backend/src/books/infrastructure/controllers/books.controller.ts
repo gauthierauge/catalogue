@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Logger, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Query, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetBooksListUseCase } from '@/books/application/use-cases/get-books-list.use-case';
 import { GetBookDetailUseCase } from '@/books/application/use-cases/get-book-detail.use-case';
@@ -10,16 +10,18 @@ import {
 } from '@/books/infrastructure/dto/output/book-list-response.dto';
 import { BookDetailResponseDto } from '@/books/infrastructure/dto/output/book-detail-response.dto';
 import { Book } from '@/books/domain/models/book.model';
+import { LoggerService } from '@/common/logger/logger.service';
 
 @ApiTags('Books')
 @Controller('books')
 export class BooksController {
-    private readonly logger = new Logger(BooksController.name);
-
     constructor(
         private readonly getBooksListUseCase: GetBooksListUseCase,
         private readonly getBookDetailUseCase: GetBookDetailUseCase,
-    ) { }
+        private readonly logger: LoggerService,
+    ) {
+        this.logger.setContext(BooksController.name);
+    }
 
     @Get()
     @ApiOperation({ summary: 'Récupérer la liste des livres' })
@@ -28,9 +30,9 @@ export class BooksController {
     async getBooks(
         @Query() query: GetBooksQueryDto,
     ): Promise<BookListResponseDto> {
-        this.logger.log('Fetching books list', query);
+        this.logger.log('Fetching books list', { filters: query });
         const books = await this.getBooksListUseCase.execute(query);
-        this.logger.log(`Successfully fetched ${books.length} books`);
+        this.logger.log('Successfully fetched books', { count: books.length });
 
         return {
             data: books.map((book) => this.toBookListItemDto(book)),
@@ -44,9 +46,9 @@ export class BooksController {
     async getBookById(
         @Param('id', ParseIntPipe) id: number,
     ): Promise<BookDetailResponseDto> {
-        this.logger.log(`Fetching book detail for ID: ${id}`);
+        this.logger.log('Fetching book detail', { bookId: id });
         const book = await this.getBookDetailUseCase.execute(id);
-        this.logger.log(`Successfully fetched book: ${book.title}`);
+        this.logger.log('Successfully fetched book', { bookId: id, title: book.title });
 
         return this.toBookDetailDto(book);
     }

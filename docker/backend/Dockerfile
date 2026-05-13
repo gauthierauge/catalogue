@@ -6,8 +6,7 @@ COPY backend/package.json backend/bun.lock ./
 RUN bun install --frozen-lockfile
 
 COPY backend/ .
-COPY docker/backend/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN chmod +x entrypoint.sh && mv entrypoint.sh /usr/local/bin/
 
 RUN bunx prisma generate
 

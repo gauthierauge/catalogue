@@ -73,7 +73,7 @@ make dev
 make up-build
 ```
 
-L'API est accessible sur `http://localhost:3000`.
+L'API est accessible sur `http://localhost:8002`.
 
 ## Tests
 

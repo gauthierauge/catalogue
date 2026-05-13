@@ -25,7 +25,7 @@ WORKDIR /app
 COPY --from=base /app/package.json /app/bun.lock ./
 RUN npm install -g bun && bun install --frozen-lockfile --production
 
-COPY --from=base /app/dist ./dist
+COPY --from=build /app/dist ./dist
 
 EXPOSE 8002
 

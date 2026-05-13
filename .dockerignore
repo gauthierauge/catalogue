@@ -10,6 +10,3 @@ backend/.env
 backend/*.db
 backend/coverage
 backend/test-results
-
-# Allow entrypoint script
-!docker/backend/entrypoint.sh

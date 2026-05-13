@@ -14,10 +14,8 @@ import type { StockEventStatus } from '@/books/application/ports/book-stock-repo
 
 export enum StockEventStatusDto {
   RESERVED = 'RESERVED',
-  PAYMENT_PENDING = 'PAYMENT_PENDING',
-  PAYMENT_SUCCESS = 'PAYMENT_SUCCESS',
-  PAYMENT_FAILED = 'PAYMENT_FAILED',
-  CART_ABANDONED = 'CART_ABANDONED',
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
 }
 
 export class StockEventDto {
@@ -69,11 +67,6 @@ export class ReserveStockBatchDto {
 }
 
 export class StockEventBatchDto {
-  @ApiPropertyOptional({ description: 'Identifiant du paiement associé' })
-  @IsOptional()
-  @IsString()
-  paymentId?: string;
-
   @ApiProperty({ enum: StockEventStatusDto, description: 'Statut de l\'événement de stock' })
   @IsEnum(StockEventStatusDto)
   status: StockEventStatus;

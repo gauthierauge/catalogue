@@ -2,10 +2,8 @@ export const BOOK_STOCK_REPOSITORY = Symbol('BOOK_STOCK_REPOSITORY');
 
 export type StockEventStatus =
   | 'RESERVED'
-  | 'PAYMENT_PENDING'
-  | 'PAYMENT_SUCCESS'
-  | 'PAYMENT_FAILED'
-  | 'CART_ABANDONED';
+  | 'SUCCESS'
+  | 'FAILED';
 
 export type StockOperation = 'increment' | 'decrement';
 
@@ -22,12 +20,12 @@ export type ApplyStockEventInput = {
 export type ApplyStockBatchEventItem = {
   bookId: number;
   quantity: number;
-  delta: number;
+  operation: StockOperation;
+  amount: number;
 };
 
 export type ApplyStockBatchEventInput = {
   idempotencyKey: string;
-  paymentId?: string;
   status: StockEventStatus;
   items: ApplyStockBatchEventItem[];
 };

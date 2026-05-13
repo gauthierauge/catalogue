@@ -149,11 +149,14 @@ export class PrismaBookStockRepository implements BookStockRepositoryPort {
       const results: ApplyStockEventResult[] = [];
 
       for (const item of input.items) {
+        const delta =
+          item.operation === 'decrement' ? -item.amount : item.amount;
+
         const [updatedStock] = await transaction.$queryRaw<UpdatedStock[]>`
           UPDATE "Book"
-          SET "quantity" = "quantity" + ${item.delta}
+          SET "quantity" = "quantity" + ${delta}
           WHERE "id" = ${item.bookId}
-            AND "quantity" + ${item.delta} >= 0
+            AND "quantity" + ${delta} >= 0
           RETURNING "quantity"
         `;
 
@@ -176,7 +179,7 @@ export class PrismaBookStockRepository implements BookStockRepositoryPort {
           INSERT INTO "StockEvent"
             ("idempotencyKey", "paymentId", "bookId", "status", "quantity", "resultQuantity")
           VALUES
-            (${this.buildBatchIdempotencyKey(input.idempotencyKey, item.bookId)}, ${input.paymentId ?? null}, ${item.bookId}, ${input.status}, ${item.quantity}, ${updatedStock.quantity})
+            (${this.buildBatchIdempotencyKey(input.idempotencyKey, item.bookId)}, ${null}, ${item.bookId}, ${input.status}, ${item.quantity}, ${updatedStock.quantity})
         `;
 
         results.push({

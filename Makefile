@@ -1,5 +1,5 @@
 DOCKER_COMPOSE = docker compose -f docker/docker-compose.yaml --env-file docker/.env
-DOCKER_COMPOSE_DEV = $(DOCKER_COMPOSE) -f docker/docker-compose.dev.yaml
+DOCKER_COMPOSE_DEV = $(DOCKER_COMPOSE) -f docker/docker-compose.override.yaml
 
 ## ——— Docker ———————————————————————————————————————
 
@@ -33,6 +33,7 @@ install: ## Install backend dependencies
 	cd backend && bun install
 
 dev: ## Start containers in dev mode with hot reload
+	$(DOCKER_COMPOSE) down && \
 	$(DOCKER_COMPOSE_DEV) up -d --build
 
 build: ## Build backend

@@ -18,15 +18,16 @@ FROM base AS build
 
 RUN bun run build
 
-FROM node:24-alpine AS production
+FROM oven/bun:1-alpine AS production
 
 WORKDIR /app
 
-COPY --from=base /app/package.json /app/bun.lock ./
-RUN npm install -g bun && bun install --frozen-lockfile --production
+COPY --from=build /app/package.json /app/bun.lock ./
+RUN bun install --frozen-lockfile --production
 
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/src/generated ./src/generated
 
 EXPOSE 8002
 
-CMD ["node", "dist/main/main"]
+CMD ["bun", "run", "dist/main/main"]

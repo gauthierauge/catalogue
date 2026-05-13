@@ -3,6 +3,7 @@ import { BOOK_STOCK_REPOSITORY } from '@/books/application/ports/book-stock-repo
 import type {
   BookStockRepositoryPort,
   StockEventStatus,
+  StockOperation,
 } from '@/books/application/ports/book-stock-repository.port';
 
 type HandleStockEventInput = {
@@ -15,7 +16,6 @@ type HandleStockEventInput = {
 
 type ReserveStockBatchInput = {
   idempotencyKey?: string;
-  paymentId?: string;
   status?: StockEventStatus;
   items: {
     bookId: number;
@@ -35,7 +35,7 @@ export class HandleStockEventUseCase {
       throw new BadRequestException('Missing x-idempotency-key header');
     }
 
-    const delta = this.getStockDelta(input.status, input.quantity);
+    const { operation, amount } = this.getStockOperation(input.status, input.quantity);
 
     return this.stockRepository.applyStockEvent({
       idempotencyKey: input.idempotencyKey.trim(),
@@ -43,7 +43,8 @@ export class HandleStockEventUseCase {
       bookId: input.bookId,
       status: input.status,
       quantity: input.quantity,
-      delta,
+      operation,
+      amount,
     });
   }
 
@@ -67,13 +68,20 @@ export class HandleStockEventUseCase {
 
     return this.stockRepository.applyStockBatchEvent({
       idempotencyKey: input.idempotencyKey.trim(),
-      paymentId: input.paymentId,
       status: input.status,
-      items: [...itemsByBookId.entries()].map(([bookId, quantity]) => ({
-        bookId,
-        quantity,
-        delta: this.getStockDelta(input.status as StockEventStatus, quantity),
-      })),
+      items: [...itemsByBookId.entries()].map(([bookId, quantity]) => {
+        const { operation, amount } = this.getStockOperation(
+          input.status as StockEventStatus,
+          quantity,
+        );
+
+        return {
+          bookId,
+          quantity,
+          operation,
+          amount,
+        };
+      }),
     });
   }
 
@@ -84,15 +92,18 @@ export class HandleStockEventUseCase {
     });
   }
 
-  private getStockDelta(status: StockEventStatus, quantity: number): number {
-    if (
-      status === 'RESERVED' ||
-      status === 'PAYMENT_PENDING' ||
-      status === 'PAYMENT_SUCCESS'
-    ) {
-      return -quantity;
+  private getStockOperation(
+    status: StockEventStatus,
+    quantity: number,
+  ): { operation: StockOperation; amount: number } {
+    if (status === 'RESERVED') {
+      return { operation: 'decrement', amount: quantity };
     }
 
-    return quantity;
+    if (status === 'SUCCESS') {
+      return { operation: 'increment', amount: 0 };
+    }
+
+    return { operation: 'increment', amount: quantity };
   }
 }

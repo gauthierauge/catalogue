@@ -19,6 +19,23 @@ export class Stock {
         return this._quantity;
     }
 
+    increment(amount: number): Stock {
+        if (!Number.isInteger(amount) || amount < 0) {
+            throw new Error('Increment amount must be a non-negative integer');
+        }
+        return new Stock(this._quantity + amount);
+    }
+
+    decrement(amount: number): Stock {
+        if (!Number.isInteger(amount) || amount < 0) {
+            throw new Error('Decrement amount must be a non-negative integer');
+        }
+        if (this._quantity - amount < 0) {
+            throw new Error('Not enough stock available');
+        }
+        return new Stock(this._quantity - amount);
+    }
+
     isAvailable(): boolean {
         return this._quantity > 0;
     }

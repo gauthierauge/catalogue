@@ -1,4 +1,5 @@
 import { Controller, Get, Query, Logger } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetBooksListUseCase } from '@/books/application/use-cases/get-books-list.use-case';
 import { GetBooksQueryDto } from '@/books/infrastructure/dto/input/get-books-query.dto';
 import {
@@ -8,13 +9,17 @@ import {
 } from '@/books/infrastructure/dto/output/book-list-response.dto';
 import { Book } from '@/books/domain/models/book.model';
 
-@Controller('books')
+@ApiTags('Books')
+@Controller('api/books')
 export class BooksController {
     private readonly logger = new Logger(BooksController.name);
 
     constructor(private readonly getBooksListUseCase: GetBooksListUseCase) { }
 
     @Get()
+    @ApiOperation({ summary: 'Récupérer la liste des livres' })
+    @ApiResponse({ status: 200, type: BookListResponseDto })
+    @ApiResponse({ status: 400, description: 'Paramètres invalides' })
     async getBooks(
         @Query() query: GetBooksQueryDto,
     ): Promise<BookListResponseDto> {

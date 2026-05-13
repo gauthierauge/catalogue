@@ -3,6 +3,7 @@ import { BOOK_STOCK_REPOSITORY } from '@/books/application/ports/book-stock-repo
 import type {
   BookStockRepositoryPort,
   StockEventStatus,
+  StockOperation,
 } from '@/books/application/ports/book-stock-repository.port';
 
 type HandleStockEventInput = {
@@ -25,7 +26,7 @@ export class HandleStockEventUseCase {
       throw new BadRequestException('Missing x-idempotency-key header');
     }
 
-    const delta = this.getStockDelta(input.status, input.quantity);
+    const { operation, amount } = this.getStockOperation(input.status, input.quantity);
 
     return this.stockRepository.applyStockEvent({
       idempotencyKey: input.idempotencyKey.trim(),
@@ -33,19 +34,23 @@ export class HandleStockEventUseCase {
       bookId: input.bookId,
       status: input.status,
       quantity: input.quantity,
-      delta,
+      operation,
+      amount,
     });
   }
 
-  private getStockDelta(status: StockEventStatus, quantity: number): number {
+  private getStockOperation(
+    status: StockEventStatus,
+    quantity: number,
+  ): { operation: StockOperation; amount: number } {
     if (
       status === 'RESERVED' ||
       status === 'PAYMENT_PENDING' ||
       status === 'PAYMENT_SUCCESS'
     ) {
-      return -quantity;
+      return { operation: 'decrement', amount: quantity };
     }
 
-    return quantity;
+    return { operation: 'increment', amount: quantity };
   }
 }

@@ -10,6 +10,7 @@ import type {
   StockEventStatus,
 } from '@/books/application/ports/book-stock-repository.port';
 import { PrismaService } from '@/prisma/prisma.service';
+import { Stock } from '@/books/domain/value-objects/stock.vo';
 
 type StoredStockEvent = {
   bookId: number;
@@ -53,11 +54,15 @@ export class PrismaBookStockRepository implements BookStockRepositoryPort {
         throw new NotFoundException('Book not found');
       }
 
-      const nextQuantity = book.quantity + input.delta;
-
-      if (nextQuantity < 0) {
-        throw new BadRequestException('Not enough stock available');
+      let updatedStock: Stock;
+      try {
+        const currentStock = Stock.create(book.quantity);
+        updatedStock = currentStock[input.operation](input.amount);
+      } catch (e) {
+        throw new BadRequestException((e as Error).message);
       }
+
+      const nextQuantity = updatedStock.quantity;
 
       await transaction.book.update({
         where: { id: input.bookId },

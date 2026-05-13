@@ -38,6 +38,9 @@ export class BooksController {
     }
 
     @Get(':id')
+    @ApiOperation({ summary: 'Récupérer le détail d\'un livre' })
+    @ApiResponse({ status: 200, type: BookDetailResponseDto })
+    @ApiResponse({ status: 404, description: 'Livre non trouvé' })
     async getBookById(
         @Param('id', ParseIntPipe) id: number,
     ): Promise<BookDetailResponseDto> {

@@ -1,0 +1,12 @@
+services:
+  backend:
+    build:
+      target: dev
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ../backend/src:/app/src
+
+  postgres:
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"

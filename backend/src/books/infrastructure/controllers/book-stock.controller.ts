@@ -6,12 +6,15 @@ import {
   Patch,
   ParseIntPipe,
 } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { HandleStockEventUseCase } from '@/books/application/use-cases/handle-stock-event.use-case';
 import {
   ReserveStockDto,
   StockEventDto,
 } from '@/books/infrastructure/dto/input/stock-event.dto';
+import { StockEventResponseDto } from '@/books/infrastructure/dto/output/stock-event-response.dto';
 
+@ApiTags('Stock')
 @Controller('books')
 export class BookStockController {
   constructor(
@@ -19,6 +22,10 @@ export class BookStockController {
   ) {}
 
   @Patch(':bookId/stock-events')
+  @ApiOperation({ summary: 'Appliquer un événement de stock sur un livre' })
+  @ApiResponse({ status: 200, type: StockEventResponseDto })
+  @ApiResponse({ status: 400, description: 'Paramètres invalides' })
+  @ApiResponse({ status: 404, description: 'Livre non trouvé' })
   updateStock(
     @Param('bookId', ParseIntPipe) bookId: number,
     @Headers('x-idempotency-key') idempotencyKey: string | undefined,
@@ -34,6 +41,10 @@ export class BookStockController {
   }
 
   @Patch(':bookId/stock/reserve')
+  @ApiOperation({ summary: 'Réserver du stock pour un livre' })
+  @ApiResponse({ status: 200, type: StockEventResponseDto })
+  @ApiResponse({ status: 400, description: 'Paramètres invalides' })
+  @ApiResponse({ status: 404, description: 'Livre non trouvé' })
   reserveStock(
     @Param('bookId', ParseIntPipe) bookId: number,
     @Headers('x-idempotency-key') idempotencyKey: string | undefined,

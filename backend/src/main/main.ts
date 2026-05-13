@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from '@/main/app.module';
 import { configureCors } from '@/main/config/cors';
+import { configureSwagger } from '@/main/config/swagger';
 import { configureValidation } from '@/main/config/validation';
 import { GlobalExceptionFilter } from '@/main/filters/global-exception.filter';
 
@@ -19,6 +20,8 @@ async function bootstrap() {
 
     app.useGlobalFilters(new GlobalExceptionFilter());
     app.setGlobalPrefix('api');
+
+    configureSwagger(app);
 
     const configService = app.get(ConfigService);
     const port = configService.get<number>('PORT', 3000);
